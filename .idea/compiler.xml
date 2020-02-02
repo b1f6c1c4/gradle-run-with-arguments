@@ -4,6 +4,7 @@
     <bytecodeTargetLevel>
       <module name="gradle-run-with-arguments.main" target="11" />
       <module name="gradle-run-with-arguments.test" target="11" />
+      <module name="gradle_run_with_arguments.test" target="11" />
     </bytecodeTargetLevel>
   </component>
 </project>
