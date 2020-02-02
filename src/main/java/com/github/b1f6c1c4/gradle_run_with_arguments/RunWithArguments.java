@@ -3,6 +3,7 @@ package com.github.b1f6c1c4.gradle_run_with_arguments;
 import com.intellij.execution.ExecutionTargetManager;
 import com.intellij.execution.ExecutorRegistry;
 import com.intellij.execution.RunManagerEx;
+import com.intellij.execution.RunnerAndConfigurationSettings;
 import com.intellij.execution.executors.DefaultRunExecutor;
 import com.intellij.execution.runners.ExecutionUtil;
 import com.intellij.execution.runners.ProgramRunner;
@@ -19,7 +20,6 @@ import com.intellij.openapi.project.Project;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 public class RunWithArguments extends AnAction {
@@ -36,8 +36,12 @@ public class RunWithArguments extends AnAction {
         if (project == null)
             return;
 
+        var init = retrieve(project);
+        if (init == null)
+            return;
+
         var disposable = Disposer.newDisposable();
-        var tf = new JTextField("", 20);
+        var tf = new JTextField(init, 20);
         var panel = LabeledComponent.create(tf, "Arguments");
 
         var popup = JBPopupFactory.getInstance().createComponentPopupBuilder(panel, tf)
@@ -52,16 +56,10 @@ public class RunWithArguments extends AnAction {
 
         new DumbAwareAction() {
             @Override
-            public void actionPerformed(AnActionEvent ee) {
-                var to = toExecute(project, tf.getText());
+            public void actionPerformed(@NotNull AnActionEvent ee) {
+                modify(project, tf.getText());
                 popup.cancel();
-                if (to != null) {
-                    try {
-                        to.call();
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
-                    }
-                }
+                execute(project);
             }
         }.registerCustomShortcutSet(CustomShortcutSet.fromString("ENTER", "shift ENTER"), tf, popup);
 
@@ -69,7 +67,7 @@ public class RunWithArguments extends AnAction {
         popup.showCenteredInCurrentWindow(project);
     }
 
-    private Callable<Object> toExecute(Project project, String args) {
+    private RunnerAndConfigurationSettings getConfig(Project project) {
         var runManager = RunManagerEx.getInstanceEx(project);
         var runConfigs = runManager.getAllSettings()
                 .stream()
@@ -83,20 +81,39 @@ public class RunWithArguments extends AnAction {
             Messages.showMessageDialog(project, "Error: please setup only one Gradle configuration!", "Run with Arguments", Messages.getErrorIcon());
             return null;
         }
+        return runConfigs.get(0);
+    }
 
-        var executor = ExecutorRegistry.getInstance().getExecutorById(DefaultRunExecutor.EXECUTOR_ID);
-        if (executor == null) {
-            Messages.showMessageDialog(project, "Error: unable to find executor!", "Run with Arguments", Messages.getErrorIcon());
+    private String retrieve(Project project) {
+        var runConfig = getConfig(project);
+        if (runConfig == null)
+            return null;
+
+        var cfg = runConfig.getConfiguration();
+        try {
+            var field = cfg.getClass().getSuperclass().getDeclaredField("mySettings");
+            field.setAccessible(true);
+            var settings = field.get(cfg);
+            field = settings.getClass().getDeclaredField("myScriptParameters");
+            field.setAccessible(true);
+            var par = field.get(settings);
+            if (!(par instanceof String))
+                return null;
+            var spar = (String) par;
+            if (spar.trim().matches("--args \".*\""))
+                return spar.substring(8, spar.length() - 1);
+            return "";
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            Messages.showMessageDialog(project, "Error: unknown error!", "Run with Arguments", Messages.getErrorIcon());
             return null;
         }
+    }
 
-        var runner = ProgramRunner.findRunnerById(executor.getId());
-        if (runner == null) {
-            Messages.showMessageDialog(project, "Error: unable to find runner!", "Run with Arguments", Messages.getErrorIcon());
-            return null;
-        }
+    private void modify(Project project, String args) {
+        var runConfig = getConfig(project);
+        if (runConfig == null)
+            return;
 
-        var runConfig = runConfigs.get(0);
         var cfg = runConfig.getConfiguration();
         try {
             var field = cfg.getClass().getSuperclass().getDeclaredField("mySettings");
@@ -111,14 +128,27 @@ public class RunWithArguments extends AnAction {
                 field.set(settings, "--args \"" + args + "\"");
         } catch (NoSuchFieldException | IllegalAccessException e) {
             Messages.showMessageDialog(project, "Error: unknown error!", "Run with Arguments", Messages.getErrorIcon());
-            return null;
+        }
+    }
+
+    private void execute(Project project) {
+        var executor = ExecutorRegistry.getInstance().getExecutorById(DefaultRunExecutor.EXECUTOR_ID);
+        if (executor == null) {
+            Messages.showMessageDialog(project, "Error: unable to find executor!", "Run with Arguments", Messages.getErrorIcon());
+            return;
         }
 
-        var target = ExecutionTargetManager.getActiveTarget(project);
+        var runner = ProgramRunner.findRunnerById(executor.getId());
+        if (runner == null) {
+            Messages.showMessageDialog(project, "Error: unable to find runner!", "Run with Arguments", Messages.getErrorIcon());
+            return;
+        }
 
-        return () -> {
-            ExecutionUtil.runConfiguration(runConfig, executor, target);
-            return null;
-        };
+        var runConfig = getConfig(project);
+        if (runConfig == null)
+            return;
+
+        var target = ExecutionTargetManager.getActiveTarget(project);
+        ExecutionUtil.runConfiguration(runConfig, executor, target);
     }
 }
