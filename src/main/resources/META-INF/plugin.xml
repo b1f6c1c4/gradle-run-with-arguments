@@ -24,6 +24,7 @@
                 icon="GradleRunWithArgumentsIcons.RUN_ACTION">
             <keyboard-shortcut first-keystroke="control shift F10" keymap="$default"/>
             <add-to-group group-id="RunMenu" anchor="first"/>
+            <add-to-group group-id="ToolbarRunGroup" anchor="first"/>
         </action>
     </actions>
 </idea-plugin>
