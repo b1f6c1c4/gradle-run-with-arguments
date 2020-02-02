@@ -1,6 +1,6 @@
 <idea-plugin>
     <id>com.b1f6c1c4.gradle_run_with_arguments</id>
-    <name>gradle: run-with-arguments</name>
+    <name>Gradle Run with Arguments</name>
     <vendor email="b1f6c1c4@gmail.com" url="http://github.com/b1f6c1c4">b1f6c1c4</vendor>
 
     <description><![CDATA[
