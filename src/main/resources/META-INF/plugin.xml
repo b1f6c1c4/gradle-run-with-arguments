@@ -18,5 +18,12 @@
 
     <actions>
         <!-- Add your actions here -->
+        <action id="gradle_run_with_arguments.RunWithArguments"
+                class="com.github.b1f6c1c4.gradle_run_with_arguments.RunWithArguments"
+                text="Run with Arguments"
+                icon="GradleRunWithArgumentsIcons.RUN_ACTION">
+            <keyboard-shortcut first-keystroke="control shift F10" keymap="$default"/>
+            <add-to-group group-id="RunMenu" anchor="first"/>
+        </action>
     </actions>
 </idea-plugin>
