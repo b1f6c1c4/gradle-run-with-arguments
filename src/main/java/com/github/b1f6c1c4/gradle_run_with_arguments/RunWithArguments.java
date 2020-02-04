@@ -15,6 +15,7 @@ import com.intellij.openapi.ui.LabeledComponent;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.openapi.util.Disposer;
+import com.intellij.openapi.util.Ref;
 import org.jetbrains.annotations.NotNull;
 import com.intellij.openapi.project.Project;
 
@@ -91,19 +92,16 @@ public class RunWithArguments extends AnAction {
 
         var cfg = runConfig.getConfiguration();
         try {
-            var field = cfg.getClass().getSuperclass().getDeclaredField("mySettings");
-            field.setAccessible(true);
-            var settings = field.get(cfg);
-            field = settings.getClass().getDeclaredField("myScriptParameters");
-            field.setAccessible(true);
-            var par = field.get(settings);
+            var par = Reflection.Get(cfg, "mySettings", "myScriptParameters");
+            if (par == null)
+                par = "";
             if (!(par instanceof String))
                 return null;
             var spar = (String) par;
             if (spar.trim().matches("--args \".*\""))
                 return spar.substring(8, spar.length() - 1);
             return "";
-        } catch (NoSuchFieldException | IllegalAccessException e) {
+        } catch (IllegalAccessException e) {
             Messages.showMessageDialog(project, "Error: unknown error!", "Run with Arguments", Messages.getErrorIcon());
             return null;
         }
@@ -116,17 +114,12 @@ public class RunWithArguments extends AnAction {
 
         var cfg = runConfig.getConfiguration();
         try {
-            var field = cfg.getClass().getSuperclass().getDeclaredField("mySettings");
-            field.setAccessible(true);
-            var settings = field.get(cfg);
-            field = settings.getClass().getDeclaredField("myScriptParameters");
-            field.setAccessible(true);
             // TODO: don't override
             if (args.trim().isEmpty())
-                field.set(settings, "");
+                Reflection.Set(cfg, "", "mySettings", "myScriptParameters");
             else
-                field.set(settings, "--args \"" + args + "\"");
-        } catch (NoSuchFieldException | IllegalAccessException e) {
+                Reflection.Set(cfg, "--args \"" + args + "\"", "mySettings", "myScriptParameters");
+        } catch (IllegalAccessException e) {
             Messages.showMessageDialog(project, "Error: unknown error!", "Run with Arguments", Messages.getErrorIcon());
         }
     }
