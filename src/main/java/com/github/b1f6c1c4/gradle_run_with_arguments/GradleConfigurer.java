@@ -3,10 +3,10 @@ package com.github.b1f6c1c4.gradle_run_with_arguments;
 import com.intellij.execution.RunManagerEx;
 import com.intellij.execution.RunnerAndConfigurationSettings;
 import com.intellij.execution.configurations.ConfigurationFactory;
+import com.intellij.execution.configurations.ConfigurationType;
 import com.intellij.openapi.project.Project;
 
 import java.lang.reflect.Array;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 
 class GradleConfigurer implements IConfigurer {
@@ -15,8 +15,15 @@ class GradleConfigurer implements IConfigurer {
     public RunnerAndConfigurationSettings create(Project project) {
         var runManager = RunManagerEx.getInstanceEx(project);
         try {
-            var o = Reflection.Get(runManager, "idToType", "cachedValue");
-            var t = Reflection.Call(o, "get", "GradleRunConfiguration");
+            ConfigurationType t = null;
+            for (var s : ConfigurationType.CONFIGURATION_TYPE_EP.getExtensionList()) {
+                if (s.getId().equals("GradleRunConfiguration")) {
+                    t = s;
+                    break;
+                }
+            }
+            if (t == null)
+                return null;
             var fs = Reflection.Get(t, "myFactories");
             var f = Array.get(fs, 0);
             if (!(f instanceof ConfigurationFactory)) {
@@ -33,7 +40,7 @@ class GradleConfigurer implements IConfigurer {
             Reflection.Set(cc, nms, "mySettings", "myTaskNames");
             Reflection.Set(cc, pp, "mySettings", "myExternalProjectPath");
             return c;
-        } catch (IllegalAccessException | InvocationTargetException e) {
+        } catch (IllegalAccessException e) {
             return null;
         }
     }
