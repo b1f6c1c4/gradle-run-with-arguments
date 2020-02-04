@@ -4,7 +4,7 @@ plugins {
 }
 
 group 'com.github.b1f6c1c4'
-version '2.0'
+version '2.1'
 
 sourceCompatibility = 1.11
 
