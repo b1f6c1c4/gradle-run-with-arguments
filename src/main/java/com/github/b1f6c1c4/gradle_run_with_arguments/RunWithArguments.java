@@ -15,13 +15,11 @@ import com.intellij.openapi.ui.LabeledComponent;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.openapi.util.Disposer;
-import com.intellij.openapi.util.Ref;
 import org.jetbrains.annotations.NotNull;
 import com.intellij.openapi.project.Project;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.stream.Collectors;
 
 public class RunWithArguments extends AnAction {
 
@@ -70,56 +68,72 @@ public class RunWithArguments extends AnAction {
 
     private RunnerAndConfigurationSettings getConfig(Project project) {
         var runManager = RunManagerEx.getInstanceEx(project);
-        var runConfigs = runManager.getAllSettings()
-                .stream()
-                .filter((c) -> c.getType().getId().equals("GradleRunConfiguration"))
-                .collect(Collectors.toList());
-        if (runConfigs.isEmpty()) {
-            Messages.showMessageDialog(project, "Error: please setup a Gradle configuration first!", "Run with Arguments", Messages.getErrorIcon());
+        var runConfig = runManager.getSelectedConfiguration();
+        if (runConfig != null) {
+            return runConfig;
+        }
+        var ans = JOptionPane.showConfirmDialog(null, "Create a configuration for you?", "Run with Arguments", JOptionPane.YES_NO_OPTION);
+        if (ans == JOptionPane.NO_OPTION)
+            return null;
+        ans = JOptionPane.showConfirmDialog(null, "Use JAR Application?", "Run with Arguments", JOptionPane.YES_NO_CANCEL_OPTION);
+        if (ans == JOptionPane.CANCEL_OPTION)
+            return null;
+        var cfg = (ans == JOptionPane.YES_OPTION) ? new JarConfigurer() : new GradleConfigurer();
+        var c = cfg.create(project);
+        if (c == null) {
+            Messages.showMessageDialog(project, "Error: unknown error!", "Run with Arguments", Messages.getErrorIcon());
             return null;
         }
-        if (runConfigs.size() > 1) {
-            Messages.showMessageDialog(project, "Error: please setup only one Gradle configuration!", "Run with Arguments", Messages.getErrorIcon());
+        runManager.addConfiguration(c);
+        runManager.setSelectedConfiguration(c);
+        Messages.showMessageDialog(project, "Configuration created. Click the blue triangle again to run.", "Run with Arguments", Messages.getInformationIcon());
+        return null;
+    }
+
+    private IConfigurer getConfigurer(RunnerAndConfigurationSettings runConfig) {
+        if (runConfig == null)
             return null;
+
+        var id = runConfig.getType().getId();
+        switch (id) {
+            case "JarApplication":
+                return new JarConfigurer();
+            case "GradleRunConfiguration":
+                return new GradleConfigurer();
+            default:
+                return null;
         }
-        return runConfigs.get(0);
     }
 
     private String retrieve(Project project) {
         var runConfig = getConfig(project);
         if (runConfig == null)
             return null;
-
-        var cfg = runConfig.getConfiguration();
-        try {
-            var par = Reflection.Get(cfg, "mySettings", "myScriptParameters");
-            if (par == null)
-                par = "";
-            if (!(par instanceof String))
-                return null;
-            var spar = (String) par;
-            if (spar.trim().matches("--args \".*\""))
-                return spar.substring(8, spar.length() - 1);
-            return "";
-        } catch (IllegalAccessException e) {
-            Messages.showMessageDialog(project, "Error: unknown error!", "Run with Arguments", Messages.getErrorIcon());
+        var cfg = getConfigurer(runConfig);
+        if (cfg == null) {
+            Messages.showMessageDialog(project, "Error: configuration type not supported!", "Run with Arguments", Messages.getErrorIcon());
             return null;
         }
+
+        var res = cfg.retrieve(runConfig);
+        if (res == null) {
+            Messages.showMessageDialog(project, "Error: unknown error!", "Run with Arguments", Messages.getErrorIcon());
+        }
+        return res;
     }
 
     private void modify(Project project, String args) {
         var runConfig = getConfig(project);
         if (runConfig == null)
             return;
+        var cfg = getConfigurer(runConfig);
+        if (cfg == null) {
+            Messages.showMessageDialog(project, "Error: configuration type not supported!", "Run with Arguments", Messages.getErrorIcon());
+            return;
+        }
 
-        var cfg = runConfig.getConfiguration();
-        try {
-            // TODO: don't override
-            if (args.trim().isEmpty())
-                Reflection.Set(cfg, "", "mySettings", "myScriptParameters");
-            else
-                Reflection.Set(cfg, "--args \"" + args + "\"", "mySettings", "myScriptParameters");
-        } catch (IllegalAccessException e) {
+        var res = cfg.modify(runConfig, args);
+        if (!res) {
             Messages.showMessageDialog(project, "Error: unknown error!", "Run with Arguments", Messages.getErrorIcon());
         }
     }
