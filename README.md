@@ -36,3 +36,7 @@ Click the blue triangle again to modify your command line arguments.
 
 Using this plugin will **destroy** all the script argument settings of your gradle run configuration.
 Only use this plugin on its *own* run configurations.
+
+## Limitation
+
+Does not support IntelliJ IDEA debugging.
