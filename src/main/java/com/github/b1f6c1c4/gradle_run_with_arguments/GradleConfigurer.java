@@ -55,7 +55,9 @@ class GradleConfigurer implements IConfigurer {
             if (!(par instanceof String))
                 return null;
             var spar = (String) par;
-            if (spar.trim().matches("--args \".*\""))
+            if (spar.trim().matches("--args \" .*\""))
+                return spar.substring(9, spar.length() - 1);
+            if (spar.trim().matches("--args \".*\"")) // Support legacy format
                 return spar.substring(8, spar.length() - 1);
             return "";
         } catch (IllegalAccessException e) {
@@ -71,7 +73,7 @@ class GradleConfigurer implements IConfigurer {
             if (args.trim().isEmpty())
                 Reflection.Set(cfg, "", "mySettings", "myScriptParameters");
             else
-                Reflection.Set(cfg, "--args \"" + args + "\"", "mySettings", "myScriptParameters");
+                Reflection.Set(cfg, "--args \" " + args + "\"", "mySettings", "myScriptParameters");
             return true;
         } catch (IllegalAccessException e) {
             return false;

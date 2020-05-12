@@ -54,7 +54,9 @@ class JarConfigurer implements IConfigurer {
             if (!(par instanceof String))
                 return null;
             var spar = (String) par;
-            if (spar.trim().matches("run --args \".*\""))
+            if (spar.trim().matches("run --args \" .*\""))
+                return spar.substring(13, spar.length() - 1);
+            if (spar.trim().matches("run --args \".*\"")) // Support legacy format
                 return spar.substring(12, spar.length() - 1);
             return "";
         } catch (IllegalAccessException e) {
@@ -70,7 +72,7 @@ class JarConfigurer implements IConfigurer {
             if (args.trim().isEmpty())
                 Reflection.Set(cfg, "run", "myBean", "PROGRAM_PARAMETERS");
             else
-                Reflection.Set(cfg, "run --args \"" + args + "\"", "myBean", "PROGRAM_PARAMETERS");
+                Reflection.Set(cfg, "run --args \" " + args + "\"", "myBean", "PROGRAM_PARAMETERS");
             return true;
         } catch (IllegalAccessException e) {
             return false;
