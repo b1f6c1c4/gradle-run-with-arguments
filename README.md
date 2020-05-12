@@ -1,8 +1,15 @@
 # gradle-run-with-arguments
 
-> Fix gradle run, and add --args to it
+> IntelliJ IDEA plugin: `gradlew run --args "..."`; `System.out.print(...);`
 
 ## Why
+
+### What's wrong with the Gradle application plugin
+
+The Gradle application plugin requires that you pass the command line arguments in the `--args` task property.
+This becomes troublesome when using IntelliJ IDEA, in which the task properties are buried deep in the menu.
+It's a total nightmare if you are debugging by changing the arguments.
+So I wrote this plugin to automatically prompt for the arguments and change the `--args` task property accordingly.
 
 ### What's wrong with the IntelliJ IDEA's Gradle plugin
 
@@ -18,25 +25,41 @@ This bug hasn't been fixed for years and we can't wait infinitely for this.
 So I wrote this plugin (specifically v2.0 and above) as a workaround.
 How this plugin works will be explained lateron.
 
-### What's wrong with the Gradle application plugin
-
-The Gradle application plugin requires that you pass the command line arguments in the `--args` task property.
-This becomes troublesome when using IntelliJ IDEA, in which the task properties are buried deep in the menu.
-It's a total nightmare if you are debuggin by changing the arguments.
-So I wrote this plugin to automatically prompt for the arguments and change the `--args` task property accordingly.
-
 ## How (TL;DR)
 
-You just install the IntelliJ IDEA plugin `Gradle Run with Arguments`.
-Remove all existing configurations.
-Click the blue triangle to create a run configuration (choose JAR configuration if you want to use fix the `System.out.print` problem).
+1. **You should first install the IntelliJ IDEA plugin `Gradle Run with Arguments`.**
+Open `Settings`/`Plugin` (or `Preferences`/`Plugin`).
+Type the name in the search box.
+Install.
+1. Decide if you want to use a JAR configuration or a Gradle configuration.
+    * Choose JAR if you want to use `System.out.print` but not the built-in debugging functionality for gradle.
+    * Choose Gradle if you want to use the built-in debugging functionality for gradle but not `System.out.print`.
+1. If you've chosen JAR configuration, you need to **patch your `gradle/wrapper/gradle-wrapper.jar` file** by right-click on it and select `Patch for "Run with Arguments"`.
+This step is **required** as long as you are using JAR configuration.
+1. If you don't have a configuration yet, just click the blue triangle next to the `Build Project` button next to the configuration combo in the toolbar run group.
+It will prompt you for creating a new configuration.
 Click the blue triangle again to modify your command line arguments.
+1. If you already have a configuration and you want to add another one, just click `Run`/`Run with Arguments`/`Add XXX Configuration`.
 
 ## Warning
 
-Using this plugin will **destroy** all the script argument settings of your gradle run configuration.
+Using this plugin is likely to **destroy** all the script argument settings of your run configuration(s).
 Only use this plugin on its *own* run configurations.
+
+## Common Problems
+
+### Quoting is not behaving properly
+
+Consider using single quotes (`'`) instead of (`"`) when introducing argument(s) with spaces.
+However, there is no way to escape quotes.
+
+### `no main manifest attribute`
+
+RTFM - patch your `gradle/wrapper/gradle-wrapper.jar` file by right-click on it and select `Patch for "Run with Arguments"`.
 
 ## Limitation
 
-Does not support IntelliJ IDEA debugging.
+* There's currently no way to support `System.out.print` while supporting in IntelliJ IDEA built-in debugging functionality at the same time.
+* There's currently no way to escape a quote (`'` or `"`) in the argument.
+* There's currently no way to use `"` instead of `'` to group the arguments.
+
