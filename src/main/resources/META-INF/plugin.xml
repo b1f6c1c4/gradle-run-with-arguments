@@ -18,24 +18,37 @@
 
     <actions>
         <!-- Add your actions here -->
-        <action id="gradle_run_with_arguments.RunWithArguments"
-                class="com.github.b1f6c1c4.gradle_run_with_arguments.RunWithArguments"
-                text="Run with Arguments..."
-                icon="GradleRunWithArgumentsIcons.RUN_ACTION">
-            <keyboard-shortcut first-keystroke="control shift F10" keymap="$default"/>
+        <group id="org.intellij.sdk.action.GroupedActions"
+               text="Run with Arguments"
+               popup="true"
+               icon="GradleRunWithArgumentsIcons.RUN_ACTION">
             <add-to-group group-id="RunMenu" anchor="first"/>
-            <add-to-group group-id="ToolbarRunGroup" anchor="first"/>
-        </action>
+            <action id="gradle_run_with_arguments.RunWithArguments"
+                    class="com.github.b1f6c1c4.gradle_run_with_arguments.RunWithArguments"
+                    text="Run with Arguments..."
+                    icon="GradleRunWithArgumentsIcons.RUN_ACTION">
+                <keyboard-shortcut first-keystroke="control shift F10" keymap="$default"/>
+                <add-to-group group-id="ToolbarRunGroup" anchor="first"/>
+            </action>
+            <action id="gradle_run_with_arguments.AddJarConfiguration"
+                    class="com.github.b1f6c1c4.gradle_run_with_arguments.AddJarConfiguration"
+                    text="Add JAR Configuration"
+                    description="System.out.print() will function properly, but you can't debug"/>
+            <action id="gradle_run_with_arguments.AddGradleConfiguration"
+                    class="com.github.b1f6c1c4.gradle_run_with_arguments.AddGradleConfiguration"
+                    text="Add Gradle Configuration"
+                    description="System.out.print() will break, but you can debug using gradle"/>
+        </group>
         <action id="com.github.b1f6c1c4.gradle_run_with_arguments.PatchJar"
                 class="com.github.b1f6c1c4.gradle_run_with_arguments.PatchJar"
-                text="Patch This for &quot;gradle-run-with-arguments&quot;"
+                text="Patch for &quot;Run with Arguments&quot;"
                 description="Patch gradle-wrapper.jar in order to use this plugin"
                 icon="GradleRunWithArgumentsIcons.PATCH_JAR">
             <add-to-group group-id="ProjectViewPopupMenu" anchor="first"/>
         </action>
         <action id="com.github.b1f6c1c4.gradle_run_with_arguments.UndoPatchJar"
                 class="com.github.b1f6c1c4.gradle_run_with_arguments.UndoPatchJar"
-                text="Undo Patch for &quot;gradle-run-with-arguments&quot;"
+                text="Undo Patch for &quot;Run with Arguments&quot;"
                 description="Undo patching gradle-wrapper.jar in order to use this plugin"
                 icon="GradleRunWithArgumentsIcons.UNDO_PATCH">
             <add-to-group group-id="ProjectViewPopupMenu" anchor="first"/>
