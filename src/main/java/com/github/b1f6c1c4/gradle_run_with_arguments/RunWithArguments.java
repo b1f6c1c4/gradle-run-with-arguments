@@ -11,12 +11,12 @@ import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CustomShortcutSet;
 import com.intellij.openapi.project.DumbAwareAction;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.LabeledComponent;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.openapi.util.Disposer;
 import org.jetbrains.annotations.NotNull;
-import com.intellij.openapi.project.Project;
 
 import javax.swing.*;
 import java.awt.*;
@@ -75,7 +75,10 @@ public class RunWithArguments extends AnAction {
         var ans = JOptionPane.showConfirmDialog(null, "Create a configuration for you?", "Run with Arguments", JOptionPane.YES_NO_OPTION);
         if (ans == JOptionPane.NO_OPTION)
             return null;
-        ans = JOptionPane.showConfirmDialog(null, "Use JAR Application?", "Run with Arguments", JOptionPane.YES_NO_CANCEL_OPTION);
+        var msg = "Use JAR Application?\n" +
+                "YES: System.out.print() will function properly, but you can't debug \n" +
+                "NO: System.out.print() will break, but you can debug using gradle";
+        ans = JOptionPane.showConfirmDialog(null, msg, "Run with Arguments", JOptionPane.YES_NO_CANCEL_OPTION);
         if (ans == JOptionPane.CANCEL_OPTION)
             return null;
         var cfg = (ans == JOptionPane.YES_OPTION) ? new JarConfigurer() : new GradleConfigurer();
@@ -86,7 +89,7 @@ public class RunWithArguments extends AnAction {
         }
         runManager.addConfiguration(c);
         runManager.setSelectedConfiguration(c);
-        var msg = (ans == JOptionPane.YES_OPTION) ? "\nDon't forget to Patch your gradle-wrapper.jar!" : "";
+        msg = (ans == JOptionPane.YES_OPTION) ? "\nDon't forget to Patch your gradle-wrapper.jar!" : "";
         Messages.showMessageDialog(project, "Configuration created. Click the blue triangle again to run." + msg, "Run with Arguments", Messages.getInformationIcon());
         return null;
     }
