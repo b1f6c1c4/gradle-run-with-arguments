@@ -30,7 +30,14 @@
                 class="com.github.b1f6c1c4.gradle_run_with_arguments.PatchJar"
                 text="Patch This for &quot;gradle-run-with-arguments&quot;"
                 description="Patch gradle-wrapper.jar in order to use this plugin"
-                icon="GradleRunWithArgumentsIcons.RUN_ACTION">
+                icon="GradleRunWithArgumentsIcons.PATCH_JAR">
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="first"/>
+        </action>
+        <action id="com.github.b1f6c1c4.gradle_run_with_arguments.UndoPatchJar"
+                class="com.github.b1f6c1c4.gradle_run_with_arguments.UndoPatchJar"
+                text="Undo Patch for &quot;gradle-run-with-arguments&quot;"
+                description="Undo patching gradle-wrapper.jar in order to use this plugin"
+                icon="GradleRunWithArgumentsIcons.UNDO_PATCH">
             <add-to-group group-id="ProjectViewPopupMenu" anchor="first"/>
         </action>
     </actions>

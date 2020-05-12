@@ -5,7 +5,6 @@ import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vfs.LocalFileSystem;
-import com.intellij.openapi.vfs.newvfs.RefreshQueue;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.ByteArrayInputStream;
@@ -23,8 +22,7 @@ public class PatchJar extends AnAction {
     @Override
     public void update(AnActionEvent e) {
         var file = e.getData(CommonDataKeys.VIRTUAL_FILE);
-        var isJar = file != null && file.getName().equals("gradle-wrapper.jar");
-        if (isJar) {
+        if (file != null && file.getName().equals("gradle-wrapper.jar")) {
             var fBak = new File(file.getPath() + ".bak");
             var fileBak = LocalFileSystem.getInstance().findFileByIoFile(fBak);
             if (fileBak == null) {
@@ -86,13 +84,13 @@ public class PatchJar extends AnAction {
             if (!fPatch.renameTo(fOrig))
                 throw new IOException("Cannot rename from " + fPatch.getAbsolutePath() + " to " + fOrig.getAbsolutePath());
 
-            LocalFileSystem.getInstance().refreshAndFindFileByIoFile(fBak);
+            LocalFileSystem.getInstance().refresh(false);
             Messages.showMessageDialog(project, "The JAR has been patched successfully.", "Run with Arguments", Messages.getInformationIcon());
         } catch (IOException ex) {
             ex.printStackTrace();
-            RefreshQueue.getInstance().createSession(true, true, () -> {
-                Messages.showMessageDialog(project, "Error(s) occurred during patching. Please check the logs.", "Run with Arguments", Messages.getErrorIcon());
-            });
+            LocalFileSystem.getInstance().refresh(true);
+            Messages.showMessageDialog(project, "Error(s) occurred during patching. Please check the logs.", "Run with Arguments", Messages.getErrorIcon());
+            throw new RuntimeException(ex);
         }
     }
 }
