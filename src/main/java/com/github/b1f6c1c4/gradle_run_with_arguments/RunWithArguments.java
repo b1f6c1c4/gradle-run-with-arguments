@@ -86,7 +86,8 @@ public class RunWithArguments extends AnAction {
         }
         runManager.addConfiguration(c);
         runManager.setSelectedConfiguration(c);
-        Messages.showMessageDialog(project, "Configuration created. Click the blue triangle again to run.", "Run with Arguments", Messages.getInformationIcon());
+        var msg = (ans == JOptionPane.YES_OPTION) ? "\nDon't forget to Patch your gradle-wrapper.jar!" : "";
+        Messages.showMessageDialog(project, "Configuration created. Click the blue triangle again to run." + msg, "Run with Arguments", Messages.getInformationIcon());
         return null;
     }
 
